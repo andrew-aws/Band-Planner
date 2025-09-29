@@ -1,0 +1,58 @@
+.bigdiv {
+  width: 100vw;
+}
+
+.planner-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  padding: 1rem;
+  justify-content: center; /* center grid horizontally */
+  max-width: 1000px; /* optional max width */
+  margin: 0 auto; /* center grid container */
+}
+
+.card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #2d3142;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.song-list {
+  margin-top: 1rem;
+}
+
+.song-item {
+  border: 1px solid #eee;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.song-requirements {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.muted {
+  color: #666;
+}
+
+.import-export-button {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.button-container {
+  justify-content: center;
+}
