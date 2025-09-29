@@ -11,7 +11,6 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "homepage": "https://andrew-aws.github.io/band-planner/",
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
