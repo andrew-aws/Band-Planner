@@ -17,6 +17,11 @@ interface Song {
   requiredMembers: string[];
 }
 
+interface PlayableSong {
+  song: Song;
+  numMissingMembers: number;
+}
+
 interface MembersSectionProps {
   members: Member[];
   availableMembers: string[];
@@ -37,7 +42,7 @@ interface SongsSectionProps {
 }
 
 interface PlayableSectionProps {
-  playableSongs: Song[];
+  playableSongs: PlayableSong[];
 }
 
 const MembersSection = ({
@@ -57,7 +62,7 @@ const MembersSection = ({
           placeholder="New member"
           value={newMember}
           onChange={(e) => setNewMember(e.target.value)}
-          width='200px'
+          width="200px"
         />
         <button onClick={addMember}>Add</button>
       </div>
@@ -97,9 +102,9 @@ const SongsSection = ({
           placeholder="Song title"
           value={newSong}
           onChange={(e) => setNewSong(e.target.value)}
-          width='200px'
+          width="200px"
         />
-      <button onClick={addSong}>Add Song</button>
+        <button onClick={addSong}>Add Song</button>
       </div>
       <p>Required Members:</p>
       {members.map((m) => (
@@ -130,6 +135,7 @@ const SongsSection = ({
               Needs:{" "}
               {song.requiredMembers
                 .map((id) => members.find((m) => m.id === id)?.name)
+                .sort()
                 .join(", ")}
             </p>
           </div>
@@ -140,18 +146,37 @@ const SongsSection = ({
 };
 
 const PlayableSection = ({ playableSongs }: PlayableSectionProps) => {
+  const missingMembersNumberList = [
+    ...new Set(
+      playableSongs.map((playableSong) => playableSong.numMissingMembers)
+    ),
+  ].sort();
+  console.log(missingMembersNumberList);
   return (
     <div className="card">
       <h2>Playable Songs</h2>
-      {playableSongs.length === 0 ? (
-        <p className="muted">No songs playable with current lineup.</p>
-      ) : (
-        <ul>
-          {playableSongs.map((song) => (
-            <li key={song.id}>{song.title}</li>
-          ))}
-        </ul>
-      )}
+      {
+        <dl>
+          {missingMembersNumberList.map((numMissingMembers) => {
+            const term = numMissingMembers
+              ? `${numMissingMembers} member${
+                  numMissingMembers === 1 ? "" : "s"
+                } missing:`
+              : "All members present:";
+            const thisTermSongs = playableSongs.filter(
+              (song) => song.numMissingMembers === numMissingMembers
+            );
+            return (
+              <div>
+                <dt>{term}</dt>
+                {thisTermSongs.map((thisTermSong) => (
+                  <dd>{thisTermSong.song.title}</dd>
+                ))}
+              </div>
+            );
+          })}
+        </dl>
+      }
     </div>
   );
 };
@@ -167,23 +192,26 @@ export default function BandPlanner() {
 
   const addMember = () => {
     if (!newMember.trim()) return;
-    setMembers([
-      ...members,
-      { id: crypto.randomUUID(), name: newMember.trim() },
-    ]);
+    setMembers(
+      [...members, { id: crypto.randomUUID(), name: newMember.trim() }].sort(
+        (a, b) => a.name.localeCompare(b.name)
+      )
+    );
     setNewMember("");
   };
 
   const addSong = () => {
     if (!newSong.trim()) return;
-    setSongs([
-      ...songs,
-      {
-        id: crypto.randomUUID(),
-        title: newSong.trim(),
-        requiredMembers: selectedMembers,
-      },
-    ]);
+    setSongs(
+      [
+        ...songs,
+        {
+          id: crypto.randomUUID(),
+          title: newSong.trim(),
+          requiredMembers: selectedMembers,
+        },
+      ].sort((a, b) => a.title.localeCompare(b.title))
+    );
     setNewSong("");
     setSelectedMembers([]);
   };
@@ -194,9 +222,13 @@ export default function BandPlanner() {
     );
   };
 
-  const playableSongs = songs.filter((song) =>
-    song.requiredMembers.every((m) => availableMembers.includes(m))
-  );
+
+  const playableSongs = songs.map((song) => {
+    const numMissingMembers = song.requiredMembers.filter(
+      (song) => availableMembers.includes(song) === false
+    ).length;
+    return { song, numMissingMembers };
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
