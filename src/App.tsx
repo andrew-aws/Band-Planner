@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import useStickyState from "./stickyState";
+import useStickyState from "../util/stickyState";
 
 import "./BandPlanner.css";
 
@@ -53,35 +53,41 @@ const MembersSection = ({
   addMember,
   toggleAvailable,
 }: MembersSectionProps) => {
-  return (
-    <div className="card">
-      <h2>Band Members</h2>
-      <div className="form-row">
-        <input
-          type="text"
-          placeholder="New member"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
-          width="200px"
-        />
-        <button onClick={addMember}>Add</button>
-      </div>
-      <div>
-        {members.map((m) => (
-          <div key={m.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={availableMembers.includes(m.id)}
-                onChange={() => toggleAvailable(m.id)}
-              />
-              {m.name}
-            </label>
-          </div>
-        ))}
-      </div>
+  const formRow = (
+    <div className="form-row">
+      <input
+        type="text"
+        placeholder="New member"
+        value={newMember}
+        onChange={(e) => setNewMember(e.target.value)}
+        width="200px"
+      />
+      <button onClick={addMember}>Add</button>
     </div>
   );
+
+  const listMember = (m: Member) => (
+    <div key={m.id}>
+      <label>
+        <input
+          type="checkbox"
+          checked={availableMembers.includes(m.id)}
+          onChange={() => toggleAvailable(m.id)}
+        />
+        {m.name}
+      </label>
+    </div>
+  );
+
+  const membersSection = (
+    <div className="card">
+      <h2>Band Members</h2>
+      {formRow}
+      <div>{members.map((m) => listMember(m))}</div>
+    </div>
+  );
+
+  return membersSection;
 };
 
 const SongsSection = ({
@@ -93,56 +99,67 @@ const SongsSection = ({
   setSelectedMembers,
   addSong,
 }: SongsSectionProps) => {
-  return (
-    <div className="card">
-      <h2>Songs</h2>
-      <div className="form-row">
-        <input
-          type="text"
-          placeholder="Song title"
-          value={newSong}
-          onChange={(e) => setNewSong(e.target.value)}
-          width="200px"
-        />
-        <button onClick={addSong}>Add Song</button>
-      </div>
-      <p>Required Members:</p>
-      {members.map((m) => (
-        <div key={m.id}>
-          <label>
-            <input
-              type="checkbox"
-              checked={selectedMembers.includes(m.id)}
-              onChange={() =>
-                setSelectedMembers((prev) =>
-                  prev.includes(m.id)
-                    ? prev.filter((id) => id !== m.id)
-                    : [...prev, m.id]
-                )
-              }
-            />
-            {m.name}
-          </label>
-        </div>
-      ))}
-      <div className="song-list">
-        {songs.map((song) => (
-          <div key={song.id} className="song-item">
-            <p>
-              <strong>{song.title}</strong>
-            </p>
-            <p className="song-requirements">
-              Needs:{" "}
-              {song.requiredMembers
-                .map((id) => members.find((m) => m.id === id)?.name)
-                .sort()
-                .join(", ")}
-            </p>
-          </div>
-        ))}
-      </div>
+  const formRow = (
+    <div className="form-row">
+      <input
+        type="text"
+        placeholder="Song title"
+        value={newSong}
+        onChange={(e) => setNewSong(e.target.value)}
+        width="200px"
+      />
+      <button onClick={addSong}>Add Song</button>
     </div>
   );
+  const listMember = (m: Member) => (
+    <div key={m.id}>
+      <label>
+        <input
+          type="checkbox"
+          checked={selectedMembers.includes(m.id)}
+          onChange={() =>
+            setSelectedMembers((prev) =>
+              prev.includes(m.id)
+                ? prev.filter((id) => id !== m.id)
+                : [...prev, m.id]
+            )
+          }
+        />
+        {m.name}
+      </label>
+    </div>
+  );
+
+  const songList = (songs: Song[]) => (
+    <div className="song-list">
+      {songs.map((song) => (
+        <div key={song.id} className="song-item">
+          <p>
+            <strong>{song.title}</strong>
+          </p>
+          <p className="song-requirements">
+            Needs:{" "}
+            {song.requiredMembers
+              .map((id) => members.find((m) => m.id === id)?.name)
+              .sort()
+              .join(", ")}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+
+  const songSection = (
+    <div className="card">
+      <h2>Songs</h2>
+      {formRow}
+      <p>Required Members:</p>
+      {members.map((m) => listMember(m))}
+      {songList(songs)}
+    </div>
+  );
+
+  return songSection;
 };
 
 const PlayableSection = ({ playableSongs }: PlayableSectionProps) => {
@@ -151,7 +168,6 @@ const PlayableSection = ({ playableSongs }: PlayableSectionProps) => {
       playableSongs.map((playableSong) => playableSong.numMissingMembers)
     ),
   ].sort();
-  console.log(missingMembersNumberList);
   return (
     <div className="card">
       <h2>Playable Songs</h2>
@@ -181,7 +197,7 @@ const PlayableSection = ({ playableSongs }: PlayableSectionProps) => {
   );
 };
 
-export default function BandPlanner() {
+const BandPlanner = () => {
   const [members, setMembers] = useStickyState<Member[]>("members", []);
   const [songs, setSongs] = useStickyState<Song[]>("songs", []);
   const [availableMembers, setAvailableMembers] = useState<string[]>([]);
@@ -221,7 +237,6 @@ export default function BandPlanner() {
       prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
     );
   };
-
 
   const playableSongs = songs.map((song) => {
     const numMissingMembers = song.requiredMembers.filter(
@@ -307,6 +322,21 @@ export default function BandPlanner() {
     setSongs([]);
   };
 
+  const exportButton = (
+    <button onClick={exportData} className="import-export-button">
+      Export
+    </button>
+  );
+
+  const importButton = (
+    <button
+      onClick={() => fileInputRef.current?.click()}
+      className="import-export-button"
+    >
+      Import
+    </button>
+  );
+
   const buttons = (
     <div
       className="button-container"
@@ -317,17 +347,8 @@ export default function BandPlanner() {
         alignContent: "center",
       }}
     >
-      <button onClick={exportData} className="import-export-button">
-        Export
-      </button>
-
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        className="import-export-button"
-      >
-        Import
-      </button>
-
+      {exportButton}
+      {importButton}
       <input
         type="file"
         accept=".json"
@@ -346,4 +367,6 @@ export default function BandPlanner() {
       {buttons}
     </div>
   );
-}
+};
+
+export default BandPlanner;
